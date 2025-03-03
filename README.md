@@ -1,30 +1,51 @@
-# <Weather API>
+# Weather Dashboard
 
-## Creates a working weather app
+## Description
 
-Provide a short description explaining the what, why, and how of your project. Use the following questions as a guide:
+The Weather Dashboard is a web application that allows users to search for a city and view the current and 5-day weather forecast. Built using the OpenWeather API, this app stores search history and displays weather details such as temperature, humidity, wind speed, and weather icons.
 
+- Motivation and Learning
+- Motivation: To create a user-friendly tool that helps travelers plan their trips by providing accurate weather forecasts.
+- Why: Built to practice working with external APIs, server-side API calls, and managing JSON data.
+- Problem Solved: Provides quick access to current and future weather information for multiple cities.
+- What I Learned: Gained experience in API integration, server-side JavaScript, and handling JSON files for storing search history.
 
+## Table of Contents
 
-- What was your motivation?
-- Why did you build this project? (Note: the answer is not "Because it was a homework assignment.")
-- What problem does it solve?
-- What did you learn?
+- [Features](#Features)
+- [Installation](#Installation)
+- [Usage](#Usage)
+- [API-Reference](#API-Reference)
+- [Credits](#Credits)
+- [License](#License)
 
-## Table of Contents (Optional)
-
-If your README is long, add a table of contents to make it easy for users to find what they need.
-
-- [Installation](#installation)
-- [Usage](#usage)
-- [Credits](#credits)
-- [License](#license)
+### Features
+- Search current weather by city name.
+- View a 5-day weather forecast.
+- Save search history.
+- Delete cities from search history
 
 ## Installation
+- Clone the repo
+- Install dependencies
+- Create a .env file and add your OpenWeather API key
+- Run the app
 
-###### Screenshot
+## Usage
+- Enter a city name in the search bar to view the current and 5-day weather forecast.
+- Click on a city in the search history to view its weather again.
+
+### Screenshot
 ![Image](https://github.com/user-attachments/assets/a5269e23-529b-42e6-8446-20f7a1dc0ad0)
 
-## Repo link
+### Repo link
 https://github.com/PHTMGatt/09-Servers-and-APIs
+
+#### Credits
+- Built by PHTMGatt.
+- Weather data provided by OpenWeather.
+
+##### License
+- This project is licensed under the MIT License - see the LICENSE file for details.
+
 
