@@ -1,3 +1,10 @@
+/* global.css */
+body {
+    background: linear-gradient(45deg, #4facfe, #00f2fe);
+  }
+    
+
+
 /*! normalize.css v8.0.1 | MIT License | github.com/necolas/normalize.css */
 /* Document
    ========================================================================== */
@@ -362,6 +369,8 @@ body {
     Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
   font-size: 16px;
   color: #1a1a1a;
+  width: 97%;       /* or any width */
+  margin: 0 auto;   /* 0 for top/bottom margins, auto for left/right margins */
 }
 
 h1,
@@ -1046,7 +1055,7 @@ a:hover {
 }
 
 .btn.btn-danger {
-  background-color: #e64c66;
+  background-color: #c80021;
   color: #ffffff;
 }
 
@@ -1879,7 +1888,7 @@ label form [type='radio'] {
   border: 1px solid transparent;
   outline: none;
   color: #1a1a1a;
-  background-color: #aeaeae;
+  background-color: #45688f;
   transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }
 
@@ -1887,7 +1896,7 @@ label form [type='radio'] {
   /* text-align: inherit; */
   margin: 0.5rem;
   width: 100%;
-  background-color: #5098e6;
+  background-color: #0964c5;
   color: #d9e9e8;
 }
 
@@ -1915,4 +1924,6 @@ label form [type='radio'] {
   background: -webkit-linear-gradient(right, #20084a, #3463bc);
   background: -moz-linear-gradient(right, #20084a, #3463bc);
   background: linear-gradient(to left, #20084a, #3463bc);
+width: 100%;
+
 }
