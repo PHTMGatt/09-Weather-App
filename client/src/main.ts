@@ -92,6 +92,7 @@ const renderCurrentWeather = (currentWeather: WeatherRecord): void => {
   heading.textContent = `${city} · ${date}`;
   weatherIcon.src = `https://openweathermap.org/img/wn/${icon}@2x.png`;
   weatherIcon.alt = iconDescription;
+  weatherIcon.hidden = false;
   heading.append(weatherIcon);
 
   tempEl.textContent = `Temperature  ${Math.round(tempF)}°F`;
