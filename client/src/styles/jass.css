@@ -174,6 +174,7 @@ aside,
 }
 
 aside {
+  min-width: 0;
   padding: 1.25rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -283,15 +284,29 @@ aside {
 }
 
 #history {
-  gap: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  width: 100%;
+  min-width: 0;
+  gap: 0.55rem;
 }
 
 #history > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 42px;
+  align-items: stretch;
+  gap: 0.55rem;
+  flex: 0 0 auto;
   width: 100%;
+  min-width: 0;
   margin: 0;
 }
 
 .history-btn {
+  width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
   min-height: 42px;
   padding: 0.65rem 0.85rem;
   color: #dcecff;
@@ -307,6 +322,10 @@ aside {
 }
 
 .delete-city {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
   width: 42px;
   min-width: 42px;
   color: #ffb0ba;
@@ -361,7 +380,12 @@ aside {
   letter-spacing: -0.04em;
 }
 
+.weather-img[hidden] {
+  display: none;
+}
+
 .weather-img {
+  flex: 0 0 auto;
   width: 64px;
   height: 64px;
   margin-left: 0.4rem;
@@ -437,7 +461,7 @@ aside {
 }
 
 @media (min-width: 992px) {
-  .row {
+  main > .row {
     flex-wrap: nowrap;
   }
 
@@ -453,6 +477,10 @@ aside {
 
   #forecast {
     flex-wrap: wrap;
+  }
+
+  #history {
+    flex-wrap: nowrap;
   }
 }
 
