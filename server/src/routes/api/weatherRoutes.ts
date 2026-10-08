@@ -12,11 +12,33 @@ const getErrorMessage = (error: unknown): string => {
   return 'An unexpected server error occurred.';
 };
 
+router.get('/locations', async (req: Request, res: Response) => {
+  try {
+    const query = typeof req.query.q === 'string' ? req.query.q : '';
+    const locations = await WeatherService.searchLocations(query);
+    res.status(200).json(locations);
+  } catch (error) {
+    const message = getErrorMessage(error);
+    console.error('Location autocomplete failed:', message);
+    res.status(502).json({ message });
+  }
+});
+
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const cityName = req.body.cityName;
-    const weatherData = await WeatherService.getWeatherForCity(cityName);
-    await HistoryService.addCity(cityName);
+    const cityName = typeof req.body.cityName === 'string' ? req.body.cityName : '';
+    const lat = Number(req.body.lat);
+    const lon = Number(req.body.lon);
+    const hasCoordinates = Number.isFinite(lat) && Number.isFinite(lon);
+
+    const weatherData = hasCoordinates
+      ? await WeatherService.getWeatherForCoordinates(lat, lon)
+      : await WeatherService.getWeatherForCity(cityName);
+
+    if (cityName.trim()) {
+      await HistoryService.addCity(cityName.trim());
+    }
+
     res.status(200).json(weatherData);
   } catch (error) {
     const message = getErrorMessage(error);
