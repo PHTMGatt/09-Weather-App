@@ -58,6 +58,14 @@ class Weather {
 
 class WeatherService {
   private readonly baseURL = 'https://api.openweathermap.org';
+  private readonly usStateCodes = new Set([
+    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+    'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+    'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+    'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+    'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
+    'DC',
+  ]);
   private apiKey: string;
   private cityName = '';
 
@@ -106,9 +114,27 @@ class WeatherService {
     };
   }
 
+  private normalizeGeocodeLocation(cityName: string): string {
+    const parts = cityName
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+    if (parts.length === 2) {
+      const stateCode = parts[1].toUpperCase();
+      if (this.usStateCodes.has(stateCode)) {
+        return `${parts[0]},${stateCode},US`;
+      }
+    }
+
+    return cityName;
+  }
+
   private buildGeocodeQuery(): string {
+    const location = this.normalizeGeocodeLocation(this.cityName);
+
     return `${this.baseURL}/geo/1.0/direct?q=${encodeURIComponent(
-      this.cityName
+      location
     )}&limit=1&appid=${this.apiKey}`;
   }
 
