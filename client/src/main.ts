@@ -1,4 +1,5 @@
 import './styles/jass.css';
+import './styles/autocomplete.css';
 
 interface WeatherRecord {
   city: string;
@@ -15,10 +16,22 @@ interface HistoryCity {
   name: string;
 }
 
+interface LocationSuggestion {
+  name: string;
+  state?: string;
+  country: string;
+  lat: number;
+  lon: number;
+  label: string;
+}
+
 const searchForm = document.getElementById('search-form') as HTMLFormElement;
 const searchInput = document.getElementById('search-input') as HTMLInputElement;
 const searchButton = document.getElementById('search-button') as HTMLButtonElement;
 const feedbackEl = document.getElementById('search-feedback') as HTMLParagraphElement;
+const suggestionsContainer = document.getElementById(
+  'location-suggestions'
+) as HTMLDivElement;
 const todayContainer = document.querySelector('#today') as HTMLDivElement;
 const forecastContainer = document.querySelector('#forecast') as HTMLDivElement;
 const searchHistoryContainer = document.getElementById('history') as HTMLDivElement;
@@ -27,6 +40,11 @@ const weatherIcon = document.getElementById('weather-img') as HTMLImageElement;
 const tempEl = document.getElementById('temp') as HTMLParagraphElement;
 const windEl = document.getElementById('wind') as HTMLParagraphElement;
 const humidityEl = document.getElementById('humidity') as HTMLParagraphElement;
+
+let suggestions: LocationSuggestion[] = [];
+let activeSuggestionIndex = -1;
+let suggestionTimer: number | undefined;
+let suggestionController: AbortController | null = null;
 
 const setFeedback = (
   message = '',
@@ -57,11 +75,17 @@ const requestJson = async <T>(url: string, options?: RequestInit): Promise<T> =>
   return payload as T;
 };
 
-const fetchWeather = async (cityName: string): Promise<void> => {
+const fetchWeather = async (
+  cityName: string,
+  location?: Pick<LocationSuggestion, 'lat' | 'lon'>
+): Promise<void> => {
   const weatherData = await requestJson<WeatherRecord[]>('/api/weather/', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ cityName }),
+    body: JSON.stringify({
+      cityName,
+      ...(location ? { lat: location.lat, lon: location.lon } : {}),
+    }),
   });
 
   if (!Array.isArray(weatherData) || weatherData.length === 0) {
@@ -74,6 +98,15 @@ const fetchWeather = async (cityName: string): Promise<void> => {
 
 const fetchSearchHistory = async (): Promise<HistoryCity[]> =>
   requestJson<HistoryCity[]>('/api/weather/history');
+
+const fetchLocationSuggestions = async (
+  query: string,
+  signal: AbortSignal
+): Promise<LocationSuggestion[]> =>
+  requestJson<LocationSuggestion[]>(
+    `/api/weather/locations?q=${encodeURIComponent(query)}`,
+    { signal }
+  );
 
 const deleteCityFromHistory = async (id: string): Promise<void> => {
   const response = await fetch(`/api/weather/history/${id}`, {
@@ -150,6 +183,141 @@ const renderSearchHistory = (historyList: HistoryCity[]): void => {
   });
 };
 
+const hideSuggestions = (): void => {
+  suggestionsContainer.hidden = true;
+  searchInput.setAttribute('aria-expanded', 'false');
+  searchInput.removeAttribute('aria-activedescendant');
+  activeSuggestionIndex = -1;
+};
+
+const updateActiveSuggestion = (nextIndex: number): void => {
+  const buttons = Array.from(
+    suggestionsContainer.querySelectorAll<HTMLButtonElement>('.location-suggestion')
+  );
+
+  if (!buttons.length) return;
+
+  activeSuggestionIndex = Math.max(0, Math.min(nextIndex, buttons.length - 1));
+
+  buttons.forEach((button, index) => {
+    const isActive = index === activeSuggestionIndex;
+    button.classList.toggle('is-active', isActive);
+    button.setAttribute('aria-selected', String(isActive));
+  });
+
+  const activeButton = buttons[activeSuggestionIndex];
+  searchInput.setAttribute('aria-activedescendant', activeButton.id);
+  activeButton.scrollIntoView({ block: 'nearest' });
+};
+
+const renderLocationSuggestions = (locations: LocationSuggestion[]): void => {
+  suggestions = locations;
+  suggestionsContainer.replaceChildren();
+  activeSuggestionIndex = -1;
+
+  if (!locations.length) {
+    hideSuggestions();
+    return;
+  }
+
+  locations.forEach((location, index) => {
+    const button = document.createElement('button');
+    const copy = document.createElement('span');
+    const name = document.createElement('span');
+    const meta = document.createElement('span');
+
+    button.type = 'button';
+    button.id = `location-suggestion-${index}`;
+    button.className = 'location-suggestion';
+    button.dataset.index = String(index);
+    button.setAttribute('role', 'option');
+    button.setAttribute('aria-selected', 'false');
+
+    copy.className = 'location-suggestion__copy';
+    name.className = 'location-suggestion__name';
+    meta.className = 'location-suggestion__meta';
+
+    name.textContent = location.name;
+    meta.textContent = [location.state, location.country].filter(Boolean).join(', ');
+
+    copy.append(name, meta);
+    button.append(copy);
+    suggestionsContainer.append(button);
+  });
+
+  suggestionsContainer.hidden = false;
+  searchInput.setAttribute('aria-expanded', 'true');
+};
+
+const queueLocationSuggestions = (): void => {
+  const query = searchInput.value.trim();
+
+  window.clearTimeout(suggestionTimer);
+  suggestionController?.abort();
+
+  if (query.length < 2) {
+    suggestions = [];
+    hideSuggestions();
+    return;
+  }
+
+  suggestionTimer = window.setTimeout(async () => {
+    suggestionController = new AbortController();
+
+    try {
+      const locations = await fetchLocationSuggestions(
+        query,
+        suggestionController.signal
+      );
+
+      if (searchInput.value.trim() === query) {
+        renderLocationSuggestions(locations);
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      hideSuggestions();
+    }
+  }, 250);
+};
+
+const runWeatherSearch = async (
+  cityName: string,
+  location?: LocationSuggestion
+): Promise<void> => {
+  const cleanCity = cityName.trim();
+
+  if (!cleanCity) {
+    setFeedback('Enter a city name to search.', 'error');
+    searchInput.focus();
+    return;
+  }
+
+  hideSuggestions();
+  setLoading(true);
+  setFeedback(`Loading weather for ${cleanCity}…`);
+
+  try {
+    await fetchWeather(cleanCity, location);
+    await getAndRenderHistory();
+    setFeedback(`Weather updated for ${cleanCity}.`, 'success');
+    searchInput.value = cleanCity;
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Unable to load weather right now.';
+    setFeedback(message, 'error');
+  } finally {
+    setLoading(false);
+  }
+};
+
+const selectLocationSuggestion = async (index: number): Promise<void> => {
+  const location = suggestions[index];
+  if (!location) return;
+
+  searchInput.value = location.label;
+  await runWeatherSearch(location.label, location);
+};
+
 const createForecastCard = () => {
   const col = document.createElement('div');
   const card = document.createElement('article');
@@ -210,29 +378,7 @@ const getAndRenderHistory = async (): Promise<void> => {
 
 const handleSearchFormSubmit = async (event: SubmitEvent): Promise<void> => {
   event.preventDefault();
-  const search = searchInput.value.trim();
-
-  if (!search) {
-    setFeedback('Enter a city name to search.', 'error');
-    searchInput.focus();
-    return;
-  }
-
-  setLoading(true);
-  setFeedback(`Loading weather for ${search}…`);
-
-  try {
-    await fetchWeather(search);
-    await getAndRenderHistory();
-    setFeedback(`Weather updated for ${search}.`, 'success');
-    searchInput.value = '';
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Unable to load weather right now.';
-    setFeedback(message, 'error');
-  } finally {
-    setLoading(false);
-  }
+  await runWeatherSearch(searchInput.value);
 };
 
 const handleSearchHistoryClick = async (event: MouseEvent): Promise<void> => {
@@ -245,20 +391,8 @@ const handleSearchHistoryClick = async (event: MouseEvent): Promise<void> => {
   const city = historyButton.dataset.cityName;
   if (!city) return;
 
-  setLoading(true);
-  setFeedback(`Loading weather for ${city}…`);
-
-  try {
-    await fetchWeather(city);
-    setFeedback(`Weather updated for ${city}.`, 'success');
-  } catch (error) {
-    setFeedback(
-      error instanceof Error ? error.message : 'Unable to load weather right now.',
-      'error'
-    );
-  } finally {
-    setLoading(false);
-  }
+  searchInput.value = city;
+  await runWeatherSearch(city);
 };
 
 const handleDeleteHistoryClick = async (event: MouseEvent): Promise<void> => {
@@ -284,10 +418,64 @@ const handleDeleteHistoryClick = async (event: MouseEvent): Promise<void> => {
   }
 };
 
-searchForm.addEventListener('submit', handleSearchFormSubmit);
+searchForm.addEventListener('submit', (event) => {
+  void handleSearchFormSubmit(event);
+});
+
+searchInput.addEventListener('input', queueLocationSuggestions);
+
+searchInput.addEventListener('keydown', (event) => {
+  if (suggestionsContainer.hidden || !suggestions.length) return;
+
+  if (event.key === 'ArrowDown') {
+    event.preventDefault();
+    updateActiveSuggestion(
+      activeSuggestionIndex < 0 ? 0 : activeSuggestionIndex + 1
+    );
+  } else if (event.key === 'ArrowUp') {
+    event.preventDefault();
+    updateActiveSuggestion(
+      activeSuggestionIndex < 0
+        ? suggestions.length - 1
+        : activeSuggestionIndex - 1
+    );
+  } else if (event.key === 'Enter' && activeSuggestionIndex >= 0) {
+    event.preventDefault();
+    void selectLocationSuggestion(activeSuggestionIndex);
+  } else if (event.key === 'Escape') {
+    hideSuggestions();
+  }
+});
+
+suggestionsContainer.addEventListener('mousedown', (event) => {
+  event.preventDefault();
+});
+
+suggestionsContainer.addEventListener('click', (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return;
+
+  const button = target.closest<HTMLButtonElement>('.location-suggestion');
+  if (!button) return;
+
+  const index = Number(button.dataset.index);
+  if (!Number.isInteger(index)) return;
+
+  void selectLocationSuggestion(index);
+});
+
 searchHistoryContainer.addEventListener('click', (event) => {
   void handleSearchHistoryClick(event);
   void handleDeleteHistoryClick(event);
+});
+
+document.addEventListener('click', (event) => {
+  const target = event.target;
+  if (!(target instanceof Node)) return;
+
+  if (!searchForm.contains(target)) {
+    hideSuggestions();
+  }
 });
 
 void getAndRenderHistory();
