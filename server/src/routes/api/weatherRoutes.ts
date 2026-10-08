@@ -1,43 +1,50 @@
 import { Router, type Request, type Response } from 'express';
+import HistoryService from '../../service/historyService.js';
+import WeatherService from '../../service/weatherService.js';
+
 const router = Router();
 
-import HistoryService from '../../service/historyService.js';
- import WeatherService from '../../service/weatherService.js';
+const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
 
-// TODO: POST Request with city name to retrieve weather data
+  return 'An unexpected server error occurred.';
+};
+
 router.post('/', async (req: Request, res: Response) => {
-  // TODO: GET weather data from city name
-  // TODO: save city to search history
-
   try {
     const cityName = req.body.cityName;
     const weatherData = await WeatherService.getWeatherForCity(cityName);
     await HistoryService.addCity(cityName);
     res.status(200).json(weatherData);
-  } catch (err) {
-    res.status(500).json({ message: err });
+  } catch (error) {
+    const message = getErrorMessage(error);
+    console.error('Weather lookup failed:', message);
+    res.status(502).json({ message });
   }
-
 });
 
-// TODO: GET search history
 router.get('/history', async (_req: Request, res: Response) => {
   try {
     const history = await HistoryService.getCities();
     res.status(200).json(history);
-  } catch (err) {
-    res.status(500).json({ message: err});
+  } catch (error) {
+    const message = getErrorMessage(error);
+    console.error('Search history lookup failed:', message);
+    res.status(500).json({ message });
   }
 });
 
-// * BONUS TODO: DELETE city from search history
 router.delete('/history/:id', async (req: Request, res: Response) => {
   try {
     const id = req.params.id;
     await HistoryService.removeCity(id);
     res.status(204).send();
-  } catch (err) {
-    res.status(500).json({ message: err });
+  } catch (error) {
+    const message = getErrorMessage(error);
+    console.error('Search history delete failed:', message);
+    res.status(500).json({ message });
   }
 });
 
