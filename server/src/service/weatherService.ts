@@ -6,6 +6,19 @@ interface Coordinates {
   lon: number;
 }
 
+interface GeocodeLocation extends Coordinates {
+  name: string;
+  country: string;
+  state?: string;
+}
+
+export interface LocationSuggestion extends Coordinates {
+  name: string;
+  country: string;
+  state?: string;
+  label: string;
+}
+
 interface OpenWeatherForecastItem {
   dt_txt: string;
   main: {
@@ -97,23 +110,6 @@ class WeatherService {
     return payload as T;
   }
 
-  private async fetchLocationData(query: string) {
-    const data = await this.fetchJson<Coordinates[]>(query);
-
-    if (!Array.isArray(data) || data.length === 0) {
-      throw new Error(`No location found for "${this.cityName}".`);
-    }
-
-    return data[0];
-  }
-
-  private destructureLocationData(locationData: Coordinates): Coordinates {
-    return {
-      lat: locationData.lat,
-      lon: locationData.lon,
-    };
-  }
-
   private normalizeGeocodeLocation(cityName: string): string {
     const parts = cityName
       .split(',')
@@ -130,21 +126,34 @@ class WeatherService {
     return cityName;
   }
 
-  private buildGeocodeQuery(): string {
-    const location = this.normalizeGeocodeLocation(this.cityName);
+  private buildGeocodeQuery(cityName = this.cityName, limit = 1): string {
+    const location = this.normalizeGeocodeLocation(cityName);
 
     return `${this.baseURL}/geo/1.0/direct?q=${encodeURIComponent(
       location
-    )}&limit=1&appid=${this.apiKey}`;
+    )}&limit=${limit}&appid=${this.apiKey}`;
   }
 
   private buildWeatherQuery(coordinates: Coordinates): string {
     return `${this.baseURL}/data/2.5/forecast?lat=${coordinates.lat}&lon=${coordinates.lon}&units=imperial&appid=${this.apiKey}`;
   }
 
+  private async fetchLocationData(query: string): Promise<GeocodeLocation> {
+    const data = await this.fetchJson<GeocodeLocation[]>(query);
+
+    if (!Array.isArray(data) || data.length === 0) {
+      throw new Error(`No location found for "${this.cityName}".`);
+    }
+
+    return data[0];
+  }
+
   private async fetchAndDestructureLocationData(): Promise<Coordinates> {
     const locationData = await this.fetchLocationData(this.buildGeocodeQuery());
-    return this.destructureLocationData(locationData);
+    return {
+      lat: locationData.lat,
+      lon: locationData.lon,
+    };
   }
 
   private async fetchWeatherData(
@@ -212,6 +221,57 @@ class WeatherService {
       });
 
     return forecastArray;
+  }
+
+  async searchLocations(query: string): Promise<LocationSuggestion[]> {
+    this.ensureConfigured();
+
+    const cleanQuery = query?.trim();
+    if (!cleanQuery || cleanQuery.length < 2) {
+      return [];
+    }
+
+    const locations = await this.fetchJson<GeocodeLocation[]>(
+      this.buildGeocodeQuery(cleanQuery, 5)
+    );
+
+    const seen = new Set<string>();
+
+    return locations
+      .map((location) => {
+        const details = [location.name, location.state, location.country].filter(
+          Boolean
+        ) as string[];
+        const label = details.join(', ');
+
+        return {
+          name: location.name,
+          state: location.state,
+          country: location.country,
+          lat: location.lat,
+          lon: location.lon,
+          label,
+        };
+      })
+      .filter((location) => {
+        const key = `${location.label}|${location.lat.toFixed(3)}|${location.lon.toFixed(3)}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  }
+
+  async getWeatherForCoordinates(
+    lat: number,
+    lon: number
+  ): Promise<Weather[]> {
+    this.ensureConfigured();
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+      throw new Error('Valid coordinates are required.');
+    }
+
+    return this.fetchWeatherData({ lat, lon });
   }
 
   async getWeatherForCity(city: string): Promise<Weather[]> {
