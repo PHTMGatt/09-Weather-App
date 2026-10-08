@@ -37,21 +37,32 @@
       <aside class="col-lg-3 pb-3">
         <p class="section-label">Search</p>
         <h2 id="form-heading">Find a city</h2>
-        <p class="search-helper">Enter a city name to load the latest forecast.</p>
+        <p class="search-helper">Start typing and choose a location, or enter a city manually.</p>
 
         <form id="search-form" class="form">
           <div class="form-group">
             <div class="input-group">
-              <input
-                class="weather-search"
-                type="search"
-                id="search-input"
-                placeholder="Howell, MI"
-                autocomplete="off"
-                aria-labelledby="form-heading"
-                aria-describedby="search-feedback"
-                aria-controls="today forecast"
-              />
+              <div class="search-field">
+                <input
+                  class="weather-search"
+                  type="search"
+                  id="search-input"
+                  placeholder="Howell, MI"
+                  autocomplete="off"
+                  aria-labelledby="form-heading"
+                  aria-describedby="search-feedback"
+                  aria-controls="location-suggestions"
+                  aria-autocomplete="list"
+                  aria-expanded="false"
+                />
+                <div
+                  id="location-suggestions"
+                  class="location-suggestions"
+                  role="listbox"
+                  aria-label="City suggestions"
+                  hidden
+                ></div>
+              </div>
               <button
                 type="submit"
                 class="btn search-button"
