@@ -244,14 +244,19 @@ class WeatherService {
         ) as string[];
         const label = details.join(', ');
 
-        return {
+        const suggestion: LocationSuggestion = {
           name: location.name,
-          state: location.state,
           country: location.country,
           lat: location.lat,
           lon: location.lon,
           label,
         };
+
+        if (location.state) {
+          suggestion.state = location.state;
+        }
+
+        return suggestion;
       })
       .filter((location) => {
         const key = `${location.label}|${location.lat.toFixed(3)}|${location.lon.toFixed(3)}`;
