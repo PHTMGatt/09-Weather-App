@@ -8,6 +8,12 @@
     name="description"
     content="Search current weather and a five-day forecast by city."
   />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap"
+    rel="stylesheet"
+  />
   <link
     rel="stylesheet"
     href="https://use.fontawesome.com/releases/v5.3.1/css/all.css"
@@ -18,14 +24,20 @@
 </head>
 
 <body>
-  <header class="container-fluid text-center text-white p-1 weather-header">
-    <h1>Weather Dashboard</h1>
+  <header class="weather-header">
+    <div class="weather-header__inner">
+      <p class="weather-eyebrow">Local forecast</p>
+      <h1>Weather Dashboard</h1>
+      <p>Search a city for current conditions and a five-day forecast.</p>
+    </div>
   </header>
 
   <main class="container-fluid">
     <div class="row">
       <aside class="col-lg-3 pb-3">
-        <h2 id="form-heading">Search for a city</h2>
+        <p class="section-label">Search</p>
+        <h2 id="form-heading">Find a city</h2>
+        <p class="search-helper">Enter a city name to load the latest forecast.</p>
 
         <form id="search-form" class="form">
           <div class="form-group">
@@ -54,7 +66,11 @@
         </form>
 
         <p id="search-feedback" role="status" aria-live="polite"></p>
-        <div class="row mt-2" id="history" aria-label="Recent searches"></div>
+
+        <div class="history-heading">
+          <p class="section-label">Recent searches</p>
+        </div>
+        <div class="row" id="history" aria-label="Recent searches"></div>
       </aside>
 
       <div class="col-lg-9 pb-3">
