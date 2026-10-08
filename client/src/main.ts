@@ -122,7 +122,7 @@ const renderCurrentWeather = (currentWeather: WeatherRecord): void => {
   const { city, date, icon, iconDescription, tempF, windSpeed, humidity } =
     currentWeather;
 
-  heading.textContent = `${city} · ${date}`;
+  heading.textContent = `Today in ${city} · ${date}`;
   weatherIcon.src = `https://openweathermap.org/img/wn/${icon}@2x.png`;
   weatherIcon.alt = iconDescription;
   weatherIcon.hidden = false;
@@ -145,7 +145,7 @@ const renderForecast = (forecast: WeatherRecord[]): void => {
   const headingCol = document.createElement('div');
   const forecastHeading = document.createElement('h4');
   headingCol.className = 'col-12';
-  forecastHeading.textContent = '5-Day Forecast';
+  forecastHeading.textContent = 'Next 5 Days';
   headingCol.append(forecastHeading);
   forecastContainer.append(headingCol);
 
