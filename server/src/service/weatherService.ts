@@ -41,6 +41,23 @@ interface OpenWeatherForecastResponse {
   list: OpenWeatherForecastItem[];
 }
 
+interface OpenWeatherCurrentResponse {
+  name: string;
+  dt: number;
+  timezone: number;
+  main: {
+    temp: number;
+    humidity: number;
+  };
+  weather: Array<{
+    icon: string;
+    description: string;
+  }>;
+  wind: {
+    speed: number;
+  };
+}
+
 class Weather {
   city: string;
   date: string;
@@ -134,15 +151,19 @@ class WeatherService {
     )}&limit=${limit}&appid=${this.apiKey}`;
   }
 
-  private buildWeatherQuery(coordinates: Coordinates): string {
+  private buildForecastQuery(coordinates: Coordinates): string {
     return `${this.baseURL}/data/2.5/forecast?lat=${coordinates.lat}&lon=${coordinates.lon}&units=imperial&appid=${this.apiKey}`;
+  }
+
+  private buildCurrentWeatherQuery(coordinates: Coordinates): string {
+    return `${this.baseURL}/data/2.5/weather?lat=${coordinates.lat}&lon=${coordinates.lon}&units=imperial&appid=${this.apiKey}`;
   }
 
   private async fetchLocationData(query: string): Promise<GeocodeLocation> {
     const data = await this.fetchJson<GeocodeLocation[]>(query);
 
     if (!Array.isArray(data) || data.length === 0) {
-      throw new Error(`No location found for "${this.cityName}".`);
+      throw new Error(`No location found for \"${this.cityName}\".`);
     }
 
     return data[0];
@@ -159,16 +180,25 @@ class WeatherService {
   private async fetchWeatherData(
     coordinates: Coordinates
   ): Promise<Weather[]> {
-    const weatherData = await this.fetchJson<OpenWeatherForecastResponse>(
-      this.buildWeatherQuery(coordinates)
-    );
+    const [currentData, forecastData] = await Promise.all([
+      this.fetchJson<OpenWeatherCurrentResponse>(
+        this.buildCurrentWeatherQuery(coordinates)
+      ),
+      this.fetchJson<OpenWeatherForecastResponse>(
+        this.buildForecastQuery(coordinates)
+      ),
+    ]);
 
-    if (!weatherData.list?.length || !weatherData.city?.name) {
+    if (!currentData.name || !currentData.main || !currentData.weather?.length) {
+      throw new Error('Weather provider returned incomplete current conditions.');
+    }
+
+    if (!forecastData.list?.length || !forecastData.city?.name) {
       throw new Error('Weather provider returned incomplete forecast data.');
     }
 
-    const currentWeather = this.parseCurrentWeather(weatherData);
-    return this.buildForecastArray(currentWeather, weatherData.list);
+    const currentWeather = this.parseCurrentWeather(currentData);
+    return this.buildForecastArray(currentWeather, forecastData.list);
   }
 
   private formatDate(value: string): string {
@@ -183,17 +213,26 @@ class WeatherService {
         });
   }
 
-  private parseCurrentWeather(response: OpenWeatherForecastResponse): Weather {
-    const currentWeather = response.list[0];
+  private formatLocalCurrentDate(timestamp: number, timezoneOffset: number): string {
+    const localDate = new Date((timestamp + timezoneOffset) * 1000);
 
+    return localDate.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    });
+  }
+
+  private parseCurrentWeather(response: OpenWeatherCurrentResponse): Weather {
     return new Weather(
-      response.city.name,
-      this.formatDate(currentWeather.dt_txt),
-      currentWeather.weather[0]?.icon || '01d',
-      currentWeather.weather[0]?.description || 'Weather conditions',
-      currentWeather.main.temp,
-      currentWeather.wind.speed,
-      currentWeather.main.humidity
+      response.name,
+      this.formatLocalCurrentDate(response.dt, response.timezone),
+      response.weather[0]?.icon || '01d',
+      response.weather[0]?.description || 'Weather conditions',
+      response.main.temp,
+      response.wind.speed,
+      response.main.humidity
     );
   }
 
