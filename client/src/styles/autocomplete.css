@@ -1,5 +1,6 @@
-.input-group {
+.search-field {
   position: relative;
+  width: 100%;
 }
 
 .location-suggestions[hidden] {
@@ -8,7 +9,7 @@
 
 .location-suggestions {
   position: absolute;
-  top: calc(100% - 4.55rem);
+  top: calc(100% + 0.4rem);
   left: 0;
   right: 0;
   z-index: 20;
