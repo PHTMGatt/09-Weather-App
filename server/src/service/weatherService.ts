@@ -57,14 +57,11 @@ class Weather {
 }
 
 class WeatherService {
-  private baseURL: string;
+  private readonly baseURL = 'https://api.openweathermap.org';
   private apiKey: string;
   private cityName = '';
 
   constructor() {
-    this.baseURL =
-      process.env.API_BASE_URL?.replace(/\/$/, '') ||
-      'https://api.openweathermap.org';
     this.apiKey = process.env.API_KEY || '';
   }
 
@@ -76,14 +73,20 @@ class WeatherService {
 
   private async fetchJson<T>(query: string): Promise<T> {
     const response = await fetch(query);
+    const payload = await response.json().catch(() => null);
 
     if (!response.ok) {
+      const providerMessage =
+        payload && typeof payload.message === 'string'
+          ? payload.message
+          : `HTTP ${response.status}`;
+
       throw new Error(
-        `Weather provider request failed with status ${response.status}.`
+        `Weather provider request failed (${response.status}): ${providerMessage}`
       );
     }
 
-    return (await response.json()) as T;
+    return payload as T;
   }
 
   private async fetchLocationData(query: string) {
