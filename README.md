@@ -39,7 +39,7 @@ The Weather Dashboard is a web application that allows users to search for a cit
 ![Weather Dashboard showing a Chicago forecast](docs/portfolio/cover.webp)
 
 ### Repo link
-https://github.com/PHTMGatt/09-Servers-and-APIs
+https://github.com/PHTMGatt/09-Weather-App
 
 #### Credits
 - Built by PHTMGatt.
