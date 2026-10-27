@@ -36,7 +36,7 @@ The Weather Dashboard is a web application that allows users to search for a cit
 - Click on a city in the search history to view its weather again.
 
 ### Screenshot
-![Weather Dashboard showing a Chicago forecast](docs/portfolio/cover.webp)
+![Weather Dashboard showing a Chicago forecast](https://raw.githubusercontent.com/PHTMGatt/12-React-Portfolio/main/src/assets/photos/Weather%20App.png)
 
 ### Repo link
 https://github.com/PHTMGatt/09-Weather-App
