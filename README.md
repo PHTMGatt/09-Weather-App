@@ -23,7 +23,7 @@ Search any city and get today's conditions plus a 5-day forecast, with live city
 
 ## Getting started
 
-Requires Node.js 18+ and a free OpenWeather API key.
+Requires Node.js 20.19+ or 22.12+ (the client builds with Vite 7) and a free OpenWeather API key.
 
 ```bash
 git clone https://github.com/PHTMGatt/09-Weather-App.git
