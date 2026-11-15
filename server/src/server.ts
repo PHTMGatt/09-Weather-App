@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import express from 'express';
-dotenv.config();
+dotenv.config({ quiet: true });
 
 // Import the routes
 import routes from './routes/index.js';
