@@ -26,9 +26,11 @@ router.get('/locations', async (req: Request, res: Response) => {
 
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const cityName = typeof req.body.cityName === 'string' ? req.body.cityName : '';
-    const lat = Number(req.body.lat);
-    const lon = Number(req.body.lon);
+    // Express 5 leaves req.body undefined when no body parser matched.
+    const body = req.body ?? {};
+    const cityName = typeof body.cityName === 'string' ? body.cityName : '';
+    const lat = Number(body.lat);
+    const lon = Number(body.lon);
     const hasCoordinates = Number.isFinite(lat) && Number.isFinite(lon);
 
     const weatherData = hasCoordinates
@@ -58,7 +60,7 @@ router.get('/history', async (_req: Request, res: Response) => {
   }
 });
 
-router.delete('/history/:id', async (req: Request, res: Response) => {
+router.delete('/history/:id', async (req: Request<{ id: string }>, res: Response) => {
   try {
     const id = req.params.id;
     await HistoryService.removeCity(id);
