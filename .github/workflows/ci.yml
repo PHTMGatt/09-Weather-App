@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install root
+        run: npm ci --ignore-scripts
+      - name: Install server
+        run: npm ci
+        working-directory: server
+      - name: Install client
+        run: npm ci
+        working-directory: client
+      - name: Build server
+        run: npm run build
+        working-directory: server
+      - name: Build client
+        run: npm run build
+        working-directory: client
+      - name: Audit root
+        run: npm audit --audit-level=high
+      - name: Audit server
+        run: npm audit --audit-level=high
+        working-directory: server
+      - name: Audit client
+        run: npm audit --audit-level=high
+        working-directory: client
