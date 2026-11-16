@@ -30,7 +30,8 @@ git clone https://github.com/PHTMGatt/09-Weather-App.git
 cd 09-Weather-App
 npm install                  # installs root, server and client dependencies
 cp env.example server/.env   # then put your OpenWeather key in server/.env
-npm start                    # builds client + server, then serves on http://localhost:3001
+npm run build                # builds client + server once
+npm start                    # serves the built app on http://localhost:3001
 ```
 
 For development with auto-reload, run `npm run start:dev` (Vite dev server for the client, API on port 3001).
