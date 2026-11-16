@@ -2,10 +2,12 @@
 
 Search any city and get today's conditions plus a 5-day forecast, with live city autocomplete and a saved search history.
 
+[![CI](https://github.com/PHTMGatt/09-Weather-App/actions/workflows/ci.yml/badge.svg)](https://github.com/PHTMGatt/09-Weather-App/actions/workflows/ci.yml) [![Live demo](https://img.shields.io/badge/live%20demo-online-2ea44f)](https://zero9-servers-and-apis.onrender.com)
+
+![Weather Dashboard showing a Grand Rapids forecast](docs/screenshot.png)
+
 **Live demo:** https://zero9-servers-and-apis.onrender.com
 *(Hosted on Render's free tier. If it has been idle, the first load can take up to a minute while the service wakes up.)*
-
-![Weather Dashboard showing a city forecast](docs/portfolio/cover.webp)
 
 ## Features
 
