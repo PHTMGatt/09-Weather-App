@@ -482,7 +482,14 @@ aside {
 }
 
 #forecast {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: stretch;
+  gap: 0.85rem;
+}
+
+#forecast > .col-12 {
+  grid-column: 1 / -1;
 }
 
 #forecast h4 {
@@ -548,9 +555,13 @@ aside {
     flex: 1 1 0;
     max-width: none;
   }
+}
 
-  #forecast {
-    flex-wrap: wrap;
+/* Stacked layout: both panels span the page instead of shrinking to content. */
+@media (max-width: 991.98px) {
+  aside,
+  .col-lg-9 {
+    width: 100%;
   }
 }
 
@@ -589,15 +600,23 @@ aside {
   .card-body {
     padding: 1.05rem;
   }
+}
 
-  .col-auto {
-    flex-basis: calc(50% - 0.7rem);
+/* Five across gets cramped beside the sidebar and on small tablets. */
+@media (max-width: 760px), (min-width: 992px) and (max-width: 1199.98px) {
+  #forecast {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 500px) {
-  .col-auto {
-    flex-basis: 100%;
+  #forecast {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* The fifth day takes the whole last line instead of leaving a gap. */
+  #forecast > :last-child:nth-child(even) {
+    grid-column: 1 / -1;
   }
 
   #search-title {

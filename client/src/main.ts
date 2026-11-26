@@ -280,6 +280,14 @@ const queueLocationSuggestions = (): void => {
   }, 250);
 };
 
+// On stacked layouts the results sit below the search panel, out of view.
+const revealResults = (): void => {
+  if (!window.matchMedia('(max-width: 991.98px)').matches) return;
+
+  searchInput.blur();
+  todayContainer.scrollIntoView({ block: 'start' });
+};
+
 const runWeatherSearch = async (
   cityName: string,
   location?: LocationSuggestion
@@ -301,6 +309,7 @@ const runWeatherSearch = async (
     await getAndRenderHistory();
     setFeedback(`Weather updated for ${cleanCity}.`, 'success');
     searchInput.value = cleanCity;
+    revealResults();
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Unable to load weather right now.';
